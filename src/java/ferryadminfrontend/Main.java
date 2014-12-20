@@ -5,6 +5,7 @@ import ferry.dto.FerryConfigDetail;
 import ferry.dto.RouteDetail;
 import ferry.dto.ScheduleDetail;
 import ferry.eto.DataAccessException;
+import ferry.eto.InvalidDateException;
 import ferry.eto.NoSuchHarbourException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -12,6 +13,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 
 /**
@@ -19,9 +22,10 @@ import javax.ejb.EJB;
  * @author mhck
  */
 public class Main {
+
     @EJB
     private static ferry.contract.AdminContract ferryAdminManager;
-    
+
     public static void main(String[] args) throws NoSuchHarbourException, ParseException, DataAccessException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Add a schedule");
@@ -29,16 +33,16 @@ public class Main {
         System.out.println("Enter ID for schedule: ");
         int scheduleId = scanner.nextInt();
         System.out.println("Enter start date for schedule: ");
-        String startDateStr = scanner.nextLine();
+        String startDateStr = scanner.next();
         DateFormat dateFormat = new SimpleDateFormat("DD-MM-YYYY");
         Date startDateSchedule = dateFormat.parse(startDateStr);
         System.out.println("Enter end date for schedule: ");
-        String endDateStr = scanner.nextLine();
+        String endDateStr = scanner.next();
         Date endDateSchedule = dateFormat.parse(endDateStr);
         System.out.println("Enter departure time, e.g. 1500: ");
         int departureTime = scanner.nextInt();
         System.out.println("Enter departure date (DD-MM-YYYY), e.g. 01-30-2014: ");
-        String departureDateStr = scanner.nextLine();
+        String departureDateStr = scanner.next();
         Date departureDate = dateFormat.parse(departureDateStr);
         System.out.println("Enter departure ID: ");
         int departureId = scanner.nextInt();
@@ -62,7 +66,11 @@ public class Main {
         ArrayList<DepartureDetail> departures = new ArrayList<>();
         departures.add(departure);
         ScheduleDetail schedule = new ScheduleDetail(scheduleId, endDateSchedule, startDateSchedule, departures);
-        ferryAdminManager.addSchedule(schedule);
+        try {
+            ferryAdminManager.addSchedule(schedule);
+        } catch (InvalidDateException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
         System.out.println("Schedule added...");
     }
 }
